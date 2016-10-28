@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../index.ts"],"names":[],"mappings":";AAAA,kCAAgC,yBAAyB,CAAC;AAAlD,kEAAkD;AAC1D,qCAAmC,4BAA4B,CAAC;AAAxD,2EAAwD","sourcesContent":["export {MongooseModelEdge} from \"./src/MongooseModelEdge\";\nexport {MongooseModelFactory} from \"./src/MongooseModelFactory\";"]}

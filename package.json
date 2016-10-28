@@ -1,0 +1,24 @@
+{
+  "name": "api-model-mongoose",
+  "version": "0.0.1-alpha.1",
+  "description": "Data Model factory for api-core based APIs using MongoDB as a data source.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ajuhos/api-model-mongoose.git"
+  },
+  "author": "We Are Break <ajuhos@we-are-break.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ajuhos/api-model-mongoose/issues"
+  },
+  "homepage": "https://github.com/ajuhos/api-model-mongoose#readme",
+  "dependencies": {
+    "@types/mongoose": "^4.5.39",
+    "api-core": "0.0.9-alpha.1",
+    "mongoose": "^4.6.5"
+  }
+}
