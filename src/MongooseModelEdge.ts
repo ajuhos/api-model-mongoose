@@ -10,6 +10,7 @@ export class MongooseModelEdge<T extends mongoose.Document> implements ApiEdgeDe
 
     methods: any = {};
     relations = [];
+    fields: string[] = [];
 
     inspect = () => `/${this.pluralName}`;
 

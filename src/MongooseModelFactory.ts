@@ -8,6 +8,7 @@ export class MongooseModelFactory {
         model.name = name;
         model.pluralName = plural;
         model.provider = mongoose.model<mongoose.Document>(name, new mongoose.Schema(scheme));
+        model.fields = Object.keys(scheme); //TODO: deep field names!
         return model
     }
 

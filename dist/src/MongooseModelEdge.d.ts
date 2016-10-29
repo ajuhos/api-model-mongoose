@@ -8,6 +8,7 @@ export declare class MongooseModelEdge<T extends mongoose.Document> implements A
     provider: mongoose.Model<T>;
     methods: any;
     relations: never[];
+    fields: string[];
     inspect: () => string;
     private static applyFilter(item, filter);
     private applyFilters(item, filters);

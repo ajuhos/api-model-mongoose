@@ -7,6 +7,7 @@ class MongooseModelEdge {
         this.idField = "_id";
         this.methods = {};
         this.relations = [];
+        this.fields = [];
         this.inspect = () => `/${this.pluralName}`;
         this.getEntry = (context) => {
             return new Promise((resolve, reject) => {

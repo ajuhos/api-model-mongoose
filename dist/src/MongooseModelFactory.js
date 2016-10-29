@@ -7,6 +7,7 @@ class MongooseModelFactory {
         model.name = name;
         model.pluralName = plural;
         model.provider = mongoose.model(name, new mongoose.Schema(scheme));
+        model.fields = Object.keys(scheme);
         return model;
     }
 }
