@@ -1,13 +1,15 @@
 "use strict";
 const api_core_1 = require("api-core");
-class MongooseModelEdge {
+const parse = require('obj-parse'), deepKeys = require('deep-keys');
+class MongooseModelEdge extends api_core_1.ApiEdge {
     constructor() {
+        super(...arguments);
         this.name = "entry";
         this.pluralName = "entries";
         this.idField = "_id";
-        this.methods = {};
+        this.methods = [];
         this.relations = [];
-        this.fields = [];
+        this.actions = [];
         this.inspect = () => `/${this.pluralName}`;
         this.getEntry = (context) => {
             return new Promise((resolve, reject) => {
@@ -69,7 +71,7 @@ class MongooseModelEdge {
                 }
                 this.getEntry(context).then(resp => {
                     let entry = resp.data;
-                    Object.keys(body).forEach(key => entry[key] = body[key]);
+                    deepKeys(body).forEach((key) => parse(key)).forEach((parsedKey) => parsedKey.assign(entry, parsedKey(body)));
                     let query = this.provider.update({ _id: entry._id || entry.id }, entry).lean();
                     query.then((entry) => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
@@ -124,9 +126,6 @@ class MongooseModelEdge {
                     resolve(new api_core_1.ApiEdgeQueryResponse(!!entry));
                 }).catch(reject);
             });
-        };
-        this.callMethod = (context, body) => {
-            return this.methods["" + context.id](context, body);
         };
     }
     static applyFilter(item, filter) {

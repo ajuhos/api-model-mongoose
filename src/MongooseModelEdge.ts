@@ -1,16 +1,21 @@
-import {ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse, ApiEdgeQueryFilter, ApiEdgeQueryFilterType} from "api-core";
+import {
+    ApiEdge, ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse,
+    ApiEdgeQueryFilter, ApiEdgeQueryFilterType
+} from "api-core";
 import * as mongoose from "mongoose";
+const parse = require('obj-parse'),
+    deepKeys = require('deep-keys');
 
-export class MongooseModelEdge<T extends mongoose.Document> implements ApiEdgeDefinition {
+export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
 
     name = "entry";
     pluralName = "entries";
     idField = "_id";
     provider: mongoose.Model<T>;
 
-    methods: any = {};
+    methods = [];
     relations = [];
-    fields: string[] = [];
+    actions = [];
 
     inspect = () => `/${this.pluralName}`;
 
@@ -104,7 +109,8 @@ export class MongooseModelEdge<T extends mongoose.Document> implements ApiEdgeDe
 
             this.getEntry(context).then(resp => {
                 let entry = resp.data;
-                Object.keys(body).forEach(key => entry[key] = body[key]);
+                //TODO: Better deep extend?
+                deepKeys(body).forEach((key: any) => parse(key)).forEach((parsedKey: any) => parsedKey.assign(entry, parsedKey(body)));
                 let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
                 query.then((entry: T) => {
                     resolve(new ApiEdgeQueryResponse(entry))
@@ -164,10 +170,6 @@ export class MongooseModelEdge<T extends mongoose.Document> implements ApiEdgeDe
                 resolve(new ApiEdgeQueryResponse(!!entry))
             }).catch(reject);
         })
-    };
-
-    callMethod = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
-        return this.methods[""+context.id](context, body);
     }
 
 }

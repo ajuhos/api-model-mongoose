@@ -1,14 +1,14 @@
 /// <reference types="mongoose" />
-import { ApiEdgeDefinition, ApiEdgeQueryContext, ApiEdgeQueryResponse } from "api-core";
+import { ApiEdge, ApiEdgeDefinition, ApiEdgeQueryContext, ApiEdgeQueryResponse } from "api-core";
 import * as mongoose from "mongoose";
-export declare class MongooseModelEdge<T extends mongoose.Document> implements ApiEdgeDefinition {
+export declare class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
     name: string;
     pluralName: string;
     idField: string;
     provider: mongoose.Model<T>;
-    methods: any;
+    methods: never[];
     relations: never[];
-    fields: string[];
+    actions: never[];
     inspect: () => string;
     private static applyFilter(item, filter);
     private applyFilters(item, filters);
@@ -21,5 +21,4 @@ export declare class MongooseModelEdge<T extends mongoose.Document> implements A
     removeEntry: (context: ApiEdgeQueryContext, body: any) => Promise<ApiEdgeQueryResponse>;
     removeEntries: () => Promise<ApiEdgeQueryResponse>;
     exists: (context: ApiEdgeQueryContext) => Promise<ApiEdgeQueryResponse>;
-    callMethod: (context: ApiEdgeQueryContext, body: any) => Promise<ApiEdgeQueryResponse>;
 }
