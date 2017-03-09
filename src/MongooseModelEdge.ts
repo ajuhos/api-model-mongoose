@@ -8,9 +8,11 @@ const parse = require('obj-parse'),
 
 export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
 
+    static defaultIdField = "id";
+
     name = "entry";
     pluralName = "entries";
-    idField = "_id";
+    idField = MongooseModelEdge.defaultIdField;
     provider: mongoose.Model<T>;
 
     methods = [];
@@ -110,7 +112,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             this.getEntry(context).then(resp => {
                 let entry = resp.data;
                 //TODO: Better deep extend?
-                deepKeys(body).forEach((key: any) => parse(key)).forEach((parsedKey: any) => parsedKey.assign(entry, parsedKey(body)));
+                deepKeys(body).map((key: any) => parse(key)).forEach((parsedKey: any) => parsedKey.assign(entry, parsedKey(body)));
                 let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
                 query.then((entry: T) => {
                     resolve(new ApiEdgeQueryResponse(entry))

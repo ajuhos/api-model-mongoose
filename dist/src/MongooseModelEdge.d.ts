@@ -2,6 +2,7 @@
 import { ApiEdge, ApiEdgeDefinition, ApiEdgeQueryContext, ApiEdgeQueryResponse } from "api-core";
 import * as mongoose from "mongoose";
 export declare class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
+    static defaultIdField: string;
     name: string;
     pluralName: string;
     idField: string;

@@ -6,7 +6,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         super(...arguments);
         this.name = "entry";
         this.pluralName = "entries";
-        this.idField = "_id";
+        this.idField = MongooseModelEdge.defaultIdField;
         this.methods = [];
         this.relations = [];
         this.actions = [];
@@ -71,7 +71,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 }
                 this.getEntry(context).then(resp => {
                     let entry = resp.data;
-                    deepKeys(body).forEach((key) => parse(key)).forEach((parsedKey) => parsedKey.assign(entry, parsedKey(body)));
+                    deepKeys(body).map((key) => parse(key)).forEach((parsedKey) => parsedKey.assign(entry, parsedKey(body)));
                     let query = this.provider.update({ _id: entry._id || entry.id }, entry).lean();
                     query.then((entry) => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
@@ -158,5 +158,6 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         filters.forEach(filter => MongooseModelEdge.applyFilter(item, filter));
     }
 }
+MongooseModelEdge.defaultIdField = "id";
 exports.MongooseModelEdge = MongooseModelEdge;
 //# sourceMappingURL=MongooseModelEdge.js.map
