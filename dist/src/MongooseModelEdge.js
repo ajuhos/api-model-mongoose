@@ -1,5 +1,6 @@
 "use strict";
 const api_core_1 = require("api-core");
+const mongoose = require("mongoose");
 const parse = require('obj-parse'), deepKeys = require('deep-keys');
 class MongooseModelEdge extends api_core_1.ApiEdge {
     constructor() {
@@ -22,7 +23,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                     query.populate(context.populatedFields.join(' '));
                 query.then(entry => {
                     resolve(new api_core_1.ApiEdgeQueryResponse(entry));
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             });
         };
         this.listEntries = (context) => {
@@ -44,13 +45,13 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                     this.provider.count(queryString).then(count => {
                         query.then(entries => {
                             resolve(new api_core_1.ApiEdgeQueryResponse(entries, { pagination: { total: count } }));
-                        }).catch(reject);
+                        }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                     });
                 }
                 else {
                     query.then(entries => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entries));
-                    }).catch(reject);
+                    }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 }
             });
         };
@@ -59,7 +60,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 let query = this.provider.create(body);
                 query.then(entries => {
                     resolve(new api_core_1.ApiEdgeQueryResponse(entries));
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             });
         };
         this.patchEntry = (context, body) => {
@@ -75,7 +76,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                     let query = this.provider.update({ _id: entry._id || entry.id }, entry).lean();
                     query.then((entry) => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
-                    }).catch(reject);
+                    }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 }).catch(reject);
             });
         };
@@ -92,7 +93,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                     let query = this.provider.update({ id: entry._id || entry.id }, entry).lean();
                     query.then((entry) => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
-                    }).catch(reject);
+                    }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 }).catch(reject);
             });
         };
@@ -111,7 +112,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 let query = this.provider.remove({ id: context.id });
                 query.then(() => {
                     resolve(new api_core_1.ApiEdgeQueryResponse({}));
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             });
         };
         this.removeEntries = () => {
@@ -124,7 +125,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 let query = this.provider.findOne({ id: context.id }, 'id');
                 query.then(entry => {
                     resolve(new api_core_1.ApiEdgeQueryResponse(!!entry));
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             });
         };
     }
@@ -156,6 +157,14 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         if (!filters.length)
             return true;
         filters.forEach(filter => MongooseModelEdge.applyFilter(item, filter));
+    }
+    static handleMongoError(e) {
+        if (e instanceof mongoose.Error.ValidationError) {
+            return new api_core_1.ApiEdgeError(422, "Unprocessable Entity");
+        }
+        else {
+            return e;
+        }
     }
 }
 MongooseModelEdge.defaultIdField = "id";

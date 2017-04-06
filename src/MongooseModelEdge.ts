@@ -51,6 +51,15 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
         filters.forEach(filter => MongooseModelEdge.applyFilter(item, filter))
     }
 
+    private static handleMongoError(e: Error): ApiEdgeError|Error {
+        if(e instanceof (mongoose as any).Error.ValidationError) {
+            return new ApiEdgeError(422, "Unprocessable Entity")
+        }
+        else {
+            return e;
+        }
+    }
+
     getEntry = (context: ApiEdgeQueryContext): Promise<ApiEdgeQueryResponse> => {
         return new Promise((resolve, reject) => {
             let queryString = { _id: context.id };
@@ -61,7 +70,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
             query.then(entry => {
                 resolve(new ApiEdgeQueryResponse(entry))
-            }).catch(reject);
+            }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
         })
     };
 
@@ -82,13 +91,13 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 this.provider.count(queryString).then(count => {
                     query.then(entries => {
                         resolve(new ApiEdgeQueryResponse(entries, { pagination: { total: count } }))
-                    }).catch(reject);
+                    }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 })
             }
             else {
                 query.then(entries => {
                     resolve(new ApiEdgeQueryResponse(entries))
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }
         })
     };
@@ -98,7 +107,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let query = this.provider.create(body);
             query.then(entries => {
                 resolve(new ApiEdgeQueryResponse(entries))
-            }).catch(reject);
+            }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
         })
     };
 
@@ -116,7 +125,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
                 query.then((entry: T) => {
                     resolve(new ApiEdgeQueryResponse(entry))
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }).catch(reject)
         })
     };
@@ -134,7 +143,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 let query =this.provider.update({ id: entry._id||entry.id }, entry).lean();
                 query.then((entry: T) => {
                     resolve(new ApiEdgeQueryResponse(entry))
-                }).catch(reject);
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }).catch(reject)
         })
     };
@@ -155,7 +164,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let query = this.provider.remove({ id: context.id });
             query.then(() => {
                 resolve(new ApiEdgeQueryResponse({}))
-            }).catch(reject);
+            }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
         })
     };
 
@@ -170,7 +179,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let query = this.provider.findOne({ id: context.id }, 'id');
             query.then(entry => {
                 resolve(new ApiEdgeQueryResponse(!!entry))
-            }).catch(reject);
+            }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
         })
     }
 

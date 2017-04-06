@@ -13,6 +13,7 @@ export declare class MongooseModelEdge<T extends mongoose.Document> extends ApiE
     inspect: () => string;
     private static applyFilter(item, filter);
     private applyFilters(item, filters);
+    private static handleMongoError(e);
     getEntry: (context: ApiEdgeQueryContext) => Promise<ApiEdgeQueryResponse>;
     listEntries: (context: ApiEdgeQueryContext) => Promise<ApiEdgeQueryResponse>;
     createEntry: (context: ApiEdgeQueryContext, body: any) => Promise<ApiEdgeQueryResponse>;
