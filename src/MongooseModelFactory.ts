@@ -4,12 +4,13 @@ import {MongooseModelEdge} from "./MongooseModelEdge";
 
 export class MongooseModelFactory {
 
-    static createModel(name: string, plural: string, scheme: any, publicScheme: any) {
+    static createModel(name: string, plural: string, scheme: any, publicScheme: any, keyField: string = MongooseModelEdge.defaultKeyField) {
         let model = new MongooseModelEdge<mongoose.Document>();
         model.name = name;
         model.pluralName = plural;
         model.provider = mongoose.model<mongoose.Document>(name, new mongoose.Schema(scheme));
         model.schema = new ApiEdgeSchema(publicScheme);
+        model.keyField = keyField;
         return model
     }
 

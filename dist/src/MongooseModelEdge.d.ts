@@ -3,9 +3,11 @@ import { ApiEdge, ApiEdgeDefinition, ApiEdgeQueryContext, ApiEdgeQueryResponse }
 import * as mongoose from "mongoose";
 export declare class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
     static defaultIdField: string;
+    static defaultKeyField: string;
     name: string;
     pluralName: string;
     idField: string;
+    keyField: string;
     provider: mongoose.Model<T>;
     methods: never[];
     relations: never[];
@@ -14,6 +16,7 @@ export declare class MongooseModelEdge<T extends mongoose.Document> extends ApiE
     private static applyFilter(item, filter);
     private applyFilters(item, filters);
     private static handleMongoError(e);
+    private extractKey(body);
     getEntry: (context: ApiEdgeQueryContext) => Promise<ApiEdgeQueryResponse>;
     listEntries: (context: ApiEdgeQueryContext) => Promise<ApiEdgeQueryResponse>;
     createEntry: (context: ApiEdgeQueryContext, body: any) => Promise<ApiEdgeQueryResponse>;

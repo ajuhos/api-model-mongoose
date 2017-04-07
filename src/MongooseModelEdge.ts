@@ -9,10 +9,12 @@ const parse = require('obj-parse'),
 export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
 
     static defaultIdField = "id";
+    static defaultKeyField = "_id";
 
     name = "entry";
     pluralName = "entries";
     idField = MongooseModelEdge.defaultIdField;
+    keyField = MongooseModelEdge.defaultKeyField;
     provider: mongoose.Model<T>;
 
     methods = [];
@@ -60,9 +62,18 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
         }
     }
 
+    private extractKey(body: any) {
+        if(!body) return null;
+        let id = body[this.keyField];
+        if(id) return { id, key: this.keyField };
+        if(!body.id && !body._id) return null;
+        id = body.id || body._id;
+        return { id, key: "_id" }
+    }
+
     getEntry = (context: ApiEdgeQueryContext): Promise<ApiEdgeQueryResponse> => {
         return new Promise((resolve, reject) => {
-            let queryString = { _id: context.id };
+            let queryString = { [this.keyField]: context.id };
             this.applyFilters(queryString, context.filters);
             let query = this.provider.findOne(queryString).lean();
             if(context.fields.length) query.select(context.fields.join(' '));
@@ -92,7 +103,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                     query.then(entries => {
                         resolve(new ApiEdgeQueryResponse(entries, { pagination: { total: count } }))
                     }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
-                })
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }
             else {
                 query.then(entries => {
@@ -114,8 +125,9 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     patchEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
             if(!context.id) {
-                if(!body || (!body.id && !body._id)) reject(new ApiEdgeError(400, "Missing ID"));
-                context.id = body.id || body._id;
+                let res = this.extractKey(body);
+                if(res == null) return reject(new ApiEdgeError(400, "Missing ID"));
+                context.id = res.id;
             }
 
             this.getEntry(context).then(resp => {
@@ -133,14 +145,15 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     updateEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
             if(!context.id) {
-                if(!body || (!body.id && !body._id)) reject(new ApiEdgeError(400, "Missing ID"));
-                context.id = body.id || body._id;
+                let res = this.extractKey(body);
+                if(res == null) return reject(new ApiEdgeError(400, "Missing ID"));
+                context.id = res.id;
             }
 
             this.getEntry(context).then(resp => {
                 let entry = resp.data;
                 Object.keys(body).forEach(key => entry[key] = body[key]);
-                let query =this.provider.update({ id: entry._id||entry.id }, entry).lean();
+                let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
                 query.then((entry: T) => {
                     resolve(new ApiEdgeQueryResponse(entry))
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
@@ -157,14 +170,18 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     removeEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
             if(!context.id) {
-                if(!body || (!body.id && !body._id)) reject(new ApiEdgeError(400, "Missing ID"));
-                context.id = body.id || body._id;
+                let res = this.extractKey(body);
+                if(res == null) return reject(new ApiEdgeError(400, "Missing ID"));
+                context.id = res.id;
             }
 
-            let query = this.provider.remove({ id: context.id });
-            query.then(() => {
-                resolve(new ApiEdgeQueryResponse({}))
-            }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
+            this.getEntry(context).then(resp => {
+                let entry = resp.data;
+                let query = this.provider.remove({ [this.keyField]: context.id });
+                query.then(() => {
+                    resolve(new ApiEdgeQueryResponse(entry))
+                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)))
+            }).catch(reject)
         })
     };
 
@@ -176,7 +193,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     exists = (context: ApiEdgeQueryContext): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
-            let query = this.provider.findOne({ id: context.id }, 'id');
+            let query = this.provider.findOne({ [this.keyField]: context.id }, 'id');
             query.then(entry => {
                 resolve(new ApiEdgeQueryResponse(!!entry))
             }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));

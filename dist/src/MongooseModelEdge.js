@@ -8,13 +8,14 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         this.name = "entry";
         this.pluralName = "entries";
         this.idField = MongooseModelEdge.defaultIdField;
+        this.keyField = MongooseModelEdge.defaultKeyField;
         this.methods = [];
         this.relations = [];
         this.actions = [];
         this.inspect = () => `/${this.pluralName}`;
         this.getEntry = (context) => {
             return new Promise((resolve, reject) => {
-                let queryString = { _id: context.id };
+                let queryString = { [this.keyField]: context.id };
                 this.applyFilters(queryString, context.filters);
                 let query = this.provider.findOne(queryString).lean();
                 if (context.fields.length)
@@ -46,7 +47,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                         query.then(entries => {
                             resolve(new api_core_1.ApiEdgeQueryResponse(entries, { pagination: { total: count } }));
                         }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
-                    });
+                    }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 }
                 else {
                     query.then(entries => {
@@ -66,9 +67,10 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         this.patchEntry = (context, body) => {
             return new Promise((resolve, reject) => {
                 if (!context.id) {
-                    if (!body || (!body.id && !body._id))
-                        reject(new api_core_1.ApiEdgeError(400, "Missing ID"));
-                    context.id = body.id || body._id;
+                    let res = this.extractKey(body);
+                    if (res == null)
+                        return reject(new api_core_1.ApiEdgeError(400, "Missing ID"));
+                    context.id = res.id;
                 }
                 this.getEntry(context).then(resp => {
                     let entry = resp.data;
@@ -83,14 +85,15 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         this.updateEntry = (context, body) => {
             return new Promise((resolve, reject) => {
                 if (!context.id) {
-                    if (!body || (!body.id && !body._id))
-                        reject(new api_core_1.ApiEdgeError(400, "Missing ID"));
-                    context.id = body.id || body._id;
+                    let res = this.extractKey(body);
+                    if (res == null)
+                        return reject(new api_core_1.ApiEdgeError(400, "Missing ID"));
+                    context.id = res.id;
                 }
                 this.getEntry(context).then(resp => {
                     let entry = resp.data;
                     Object.keys(body).forEach(key => entry[key] = body[key]);
-                    let query = this.provider.update({ id: entry._id || entry.id }, entry).lean();
+                    let query = this.provider.update({ _id: entry._id || entry.id }, entry).lean();
                     query.then((entry) => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
                     }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
@@ -105,14 +108,18 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         this.removeEntry = (context, body) => {
             return new Promise((resolve, reject) => {
                 if (!context.id) {
-                    if (!body || (!body.id && !body._id))
-                        reject(new api_core_1.ApiEdgeError(400, "Missing ID"));
-                    context.id = body.id || body._id;
+                    let res = this.extractKey(body);
+                    if (res == null)
+                        return reject(new api_core_1.ApiEdgeError(400, "Missing ID"));
+                    context.id = res.id;
                 }
-                let query = this.provider.remove({ id: context.id });
-                query.then(() => {
-                    resolve(new api_core_1.ApiEdgeQueryResponse({}));
-                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
+                this.getEntry(context).then(resp => {
+                    let entry = resp.data;
+                    let query = this.provider.remove({ [this.keyField]: context.id });
+                    query.then(() => {
+                        resolve(new api_core_1.ApiEdgeQueryResponse(entry));
+                    }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
+                }).catch(reject);
             });
         };
         this.removeEntries = () => {
@@ -122,7 +129,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
         };
         this.exists = (context) => {
             return new Promise((resolve, reject) => {
-                let query = this.provider.findOne({ id: context.id }, 'id');
+                let query = this.provider.findOne({ [this.keyField]: context.id }, 'id');
                 query.then(entry => {
                     resolve(new api_core_1.ApiEdgeQueryResponse(!!entry));
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
@@ -166,7 +173,19 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
             return e;
         }
     }
+    extractKey(body) {
+        if (!body)
+            return null;
+        let id = body[this.keyField];
+        if (id)
+            return { id, key: this.keyField };
+        if (!body.id && !body._id)
+            return null;
+        id = body.id || body._id;
+        return { id, key: "_id" };
+    }
 }
 MongooseModelEdge.defaultIdField = "id";
+MongooseModelEdge.defaultKeyField = "_id";
 exports.MongooseModelEdge = MongooseModelEdge;
 //# sourceMappingURL=MongooseModelEdge.js.map
