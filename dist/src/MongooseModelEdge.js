@@ -76,7 +76,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                     let entry = resp.data;
                     deepKeys(body).map((key) => parse(key)).forEach((parsedKey) => parsedKey.assign(entry, parsedKey(body)));
                     let query = this.provider.update({ _id: entry._id || entry.id }, entry).lean();
-                    query.then((entry) => {
+                    query.then(() => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
                     }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 }).catch(reject);
@@ -94,7 +94,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                     let entry = resp.data;
                     Object.keys(body).forEach(key => entry[key] = body[key]);
                     let query = this.provider.update({ _id: entry._id || entry.id }, entry).lean();
-                    query.then((entry) => {
+                    query.then(() => {
                         resolve(new api_core_1.ApiEdgeQueryResponse(entry));
                     }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
                 }).catch(reject);

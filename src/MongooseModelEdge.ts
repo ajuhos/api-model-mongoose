@@ -135,7 +135,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 //TODO: Better deep extend?
                 deepKeys(body).map((key: any) => parse(key)).forEach((parsedKey: any) => parsedKey.assign(entry, parsedKey(body)));
                 let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
-                query.then((entry: T) => {
+                query.then(() => {
                     resolve(new ApiEdgeQueryResponse(entry))
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }).catch(reject)
@@ -154,7 +154,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 let entry = resp.data;
                 Object.keys(body).forEach(key => entry[key] = body[key]);
                 let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
-                query.then((entry: T) => {
+                query.then(() => {
                     resolve(new ApiEdgeQueryResponse(entry))
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }).catch(reject)
