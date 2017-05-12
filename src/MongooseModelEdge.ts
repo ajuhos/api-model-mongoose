@@ -43,6 +43,9 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             case ApiEdgeQueryFilterType.LowerThanOrEquals:
                 item[filter.field] = { $lte: filter.value };
                 break;
+            case ApiEdgeQueryFilterType.Similar:
+                item[filter.field] = { $regex: filter.value, $options: 'i' };
+                break;
             default:
                 return false;
         }
@@ -77,7 +80,6 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             this.applyFilters(queryString, context.filters);
             let query = this.provider.findOne(queryString).lean();
             if(context.fields.length) query.select(context.fields.join(' '));
-            if(context.populatedFields.length) query.populate(context.populatedFields.join(' '));
 
             query.then(entry => {
                 resolve(new ApiEdgeQueryResponse(entry))
@@ -91,7 +93,6 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             this.applyFilters(queryString, context.filters);
             let query = this.provider.find(queryString).lean();
             if(context.fields.length) query.select(context.fields.join(' '));
-            if(context.populatedFields.length) query.populate(context.populatedFields.join(' '));
             if(context.sortBy) {
                 let sortOptions: any = {};
                 context.sortBy.forEach((sort: any[]) => sortOptions[""+sort[0]] = sort[1]);

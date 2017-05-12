@@ -20,8 +20,6 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 let query = this.provider.findOne(queryString).lean();
                 if (context.fields.length)
                     query.select(context.fields.join(' '));
-                if (context.populatedFields.length)
-                    query.populate(context.populatedFields.join(' '));
                 query.then(entry => {
                     resolve(new api_core_1.ApiEdgeQueryResponse(entry));
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
@@ -34,8 +32,6 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 let query = this.provider.find(queryString).lean();
                 if (context.fields.length)
                     query.select(context.fields.join(' '));
-                if (context.populatedFields.length)
-                    query.populate(context.populatedFields.join(' '));
                 if (context.sortBy) {
                     let sortOptions = {};
                     context.sortBy.forEach((sort) => sortOptions["" + sort[0]] = sort[1]);
@@ -155,6 +151,9 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
                 break;
             case api_core_1.ApiEdgeQueryFilterType.LowerThanOrEquals:
                 item[filter.field] = { $lte: filter.value };
+                break;
+            case api_core_1.ApiEdgeQueryFilterType.Similar:
+                item[filter.field] = { $regex: filter.value, $options: 'i' };
                 break;
             default:
                 return false;
