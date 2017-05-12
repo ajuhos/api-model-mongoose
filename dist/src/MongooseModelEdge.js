@@ -132,28 +132,34 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
             });
         };
     }
-    static applyFilter(item, filter) {
+    mapIdToKeyField(field) {
+        return this.idField === field ? this.keyField : field;
+    }
+    applyFilter(item, filter) {
         switch (filter.type) {
             case api_core_1.ApiEdgeQueryFilterType.Equals:
-                item[filter.field] = filter.value;
+                item[this.mapIdToKeyField(filter.field)] = filter.value;
                 break;
             case api_core_1.ApiEdgeQueryFilterType.NotEquals:
-                item[filter.field] = { $ne: filter.value };
+                item[this.mapIdToKeyField(filter.field)] = { $ne: filter.value };
                 break;
             case api_core_1.ApiEdgeQueryFilterType.GreaterThan:
-                item[filter.field] = { $gt: filter.value };
+                item[this.mapIdToKeyField(filter.field)] = { $gt: filter.value };
                 break;
             case api_core_1.ApiEdgeQueryFilterType.GreaterThanOrEquals:
-                item[filter.field] = { $gte: filter.value };
+                item[this.mapIdToKeyField(filter.field)] = { $gte: filter.value };
                 break;
             case api_core_1.ApiEdgeQueryFilterType.LowerThan:
-                item[filter.field] = { $lt: filter.value };
+                item[this.mapIdToKeyField(filter.field)] = { $lt: filter.value };
                 break;
             case api_core_1.ApiEdgeQueryFilterType.LowerThanOrEquals:
-                item[filter.field] = { $lte: filter.value };
+                item[this.mapIdToKeyField(filter.field)] = { $lte: filter.value };
                 break;
             case api_core_1.ApiEdgeQueryFilterType.Similar:
-                item[filter.field] = { $regex: filter.value, $options: 'i' };
+                item[this.mapIdToKeyField(filter.field)] = { $regex: filter.value, $options: 'i' };
+                break;
+            case api_core_1.ApiEdgeQueryFilterType.In:
+                item[this.mapIdToKeyField(filter.field)] = { $in: filter.value };
                 break;
             default:
                 return false;
@@ -162,7 +168,7 @@ class MongooseModelEdge extends api_core_1.ApiEdge {
     applyFilters(item, filters) {
         if (!filters.length)
             return true;
-        filters.forEach(filter => MongooseModelEdge.applyFilter(item, filter));
+        filters.forEach(filter => this.applyFilter(item, filter));
     }
     static handleMongoError(e) {
         if (e instanceof mongoose.Error.ValidationError) {

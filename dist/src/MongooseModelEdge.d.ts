@@ -13,7 +13,8 @@ export declare class MongooseModelEdge<T extends mongoose.Document> extends ApiE
     relations: never[];
     actions: never[];
     inspect: () => string;
-    private static applyFilter(item, filter);
+    private mapIdToKeyField(field);
+    private applyFilter(item, filter);
     private applyFilters(item, filters);
     private static handleMongoError(e);
     private extractKey(body);
