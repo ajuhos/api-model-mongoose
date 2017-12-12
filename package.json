@@ -1,6 +1,6 @@
 {
   "name": "api-model-mongoose",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Data Model factory for api-core based APIs using MongoDB as a data source.",
   "main": "dist/index.js",
   "scripts": {
