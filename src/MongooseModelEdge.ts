@@ -68,6 +68,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             return new ApiEdgeError(422, "Unprocessable Entity")
         }
         else {
+            console.log('MONGO ERROR', e);
             return e;
         }
     }

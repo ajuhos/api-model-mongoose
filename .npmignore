@@ -17,3 +17,9 @@ dist/
 # Coverage
 .nyc_output
 coverage
+
+# Files not required on usage
+.travis.yml
+.coveralls.yml
+.editorconfig
+.gitignore

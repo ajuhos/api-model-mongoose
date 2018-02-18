@@ -4,7 +4,8 @@
   "description": "Data Model factory for api-core based APIs using MongoDB as a data source.",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "tsc"
   },
   "repository": {
     "type": "git",
@@ -17,10 +18,12 @@
   },
   "homepage": "https://github.com/ajuhos/api-model-mongoose#readme",
   "dependencies": {
-    "@types/mongoose": "^4.5.39",
     "api-core": "^0.6.6",
     "deep-keys": "^0.3.0",
     "mongoose": "^4.6.5",
     "obj-parse": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^4.5.39"
   }
 }
