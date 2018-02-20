@@ -1,11 +1,12 @@
 {
   "name": "api-model-mongoose",
-  "version": "0.5.3",
+  "version": "0.6.41",
   "description": "Data Model factory for api-core based APIs using MongoDB as a data source.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "tsc"
+    "prepublish": "tsc"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,7 @@
   },
   "homepage": "https://github.com/ajuhos/api-model-mongoose#readme",
   "dependencies": {
-    "api-core": "^0.6.6",
+    "api-core": "0.6.40",
     "deep-keys": "^0.3.0",
     "mongoose": "^4.6.5",
     "obj-parse": "^0.3.0"
