@@ -1,6 +1,6 @@
 {
   "name": "api-model-mongoose",
-  "version": "0.7.1",
+  "version": "0.7.3",
   "description": "Data Model factory for api-core based APIs using MongoDB as a data source.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,10 +21,12 @@
   "dependencies": {
     "api-core": "0.7.1",
     "deep-keys": "^0.3.0",
-    "mongoose": "^4.6.5",
     "obj-parse": "^0.3.0"
   },
+  "peerDependencies": {
+    "mongoose": "~5"
+  },
   "devDependencies": {
-    "@types/mongoose": "^4.5.39"
+    "@types/mongoose": "^5.3.7"
   }
 }
