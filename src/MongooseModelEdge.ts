@@ -1,7 +1,8 @@
 import {
     ApiEdge, ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse,
-    ApiEdgeQueryFilter, ApiEdgeQueryFilterType
+    ApiEdgeQueryFilter, ApiEdgeQueryFilterType, Api, ApiEdgeSchema
 } from "api-core";
+import {mapSchema, convertMongooseSchemaToSimplSchema, buildPublicSchema} from "./utils/SchemaConverter"
 import * as mongoose from "mongoose";
 const parse = require('obj-parse'),
     deepKeys = require('deep-keys');
@@ -20,6 +21,28 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     methods = [];
     relations = [];
     actions = [];
+
+    private originalSchema: any;
+    private originalPublicSchema: any;
+
+    constructor(publicSchema: any, schema: any) {
+        super();
+        this.originalPublicSchema = publicSchema || buildPublicSchema(schema);
+        this.originalSchema = schema
+    }
+
+    prepare = async (api: Api) => {
+        if(this.originalSchema) {
+            this.schema = new ApiEdgeSchema(
+                this.originalPublicSchema,
+                mapSchema(convertMongooseSchemaToSimplSchema(this.originalSchema, api, this), this.originalPublicSchema),
+                Object.keys(this.originalPublicSchema)
+            )
+        }
+        else {
+            this.schema = new ApiEdgeSchema(this.originalPublicSchema, null)
+        }
+    };
 
     inspect = () => `/${this.pluralName}`;
 
