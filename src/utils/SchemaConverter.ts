@@ -29,6 +29,7 @@ export function mapSchema(schema: any, publicSchema: any) {
 }
 
 export type RelationMetadata = {
+    name?: string
     foreignName?: string
     type?: 'one-to-one'|'many-to-many'|'many-to-one'
 }
@@ -39,6 +40,13 @@ function mapSchemaFieldType(type: any): any {
     if(type === mongoose.Schema.Types.ObjectId) return SchemaReference;
     if(type === mongoose.Schema.Types.Mixed) return Mixed;
     if(type === Date) return JSONDate;
+
+    if(type === Object) {
+        return {
+            type: Object,
+            blackbox: true
+        }
+    }
 
     if(typeof type === "object") {
         if(type instanceof mongoose.Schema) {
@@ -63,7 +71,7 @@ function prepareSchemaReference(key: string, { ref: foreignEdgeName, relation = 
         if(relationIndex === -1) {
             api.relation(new OneToOneRelation(edge, foreignEdge, {
                 relationId: key,
-                name: key
+                name: relation.name || key
             }));
 
             if(relation.type !== 'one-to-one') {
@@ -85,7 +93,7 @@ function prepareSchemaReferenceArray(key: string, { ref: foreignEdgeName, relati
             const hasPair = relation.type !== 'many-to-one';
             api.relation(new OneToManyRelation(edge, foreignEdge, {
                 relationId: key,
-                name: key,
+                name: relation.name || key,
                 hasPair
             }));
 
@@ -122,6 +130,11 @@ function mapSchemaField(field: any, api?: Api, edge?: ApiEdgeDefinition, key?: s
             type: mapSchemaFieldType(field.type)
         };
 
+        if(field.type === Object) {
+            output.blackbox = true;
+            output.type = Object
+        }
+
         if(typeof output.default !== "undefined") {
             const defaultGetter = output.default;
             if(typeof defaultGetter === "function") {
@@ -142,6 +155,11 @@ function mapSchemaField(field: any, api?: Api, edge?: ApiEdgeDefinition, key?: s
             delete output.relation
         }
 
+        if(typeof output.enum !== "undefined") {
+            output.allowedValues = output.enum;
+            delete output.enum
+        }
+
         delete output.unique;
         delete output.sparse;
         delete output.index;
@@ -149,6 +167,7 @@ function mapSchemaField(field: any, api?: Api, edge?: ApiEdgeDefinition, key?: s
         delete output.get;
         delete output.set;
         delete output.validate;
+        delete output.private;
 
         return output
     }
@@ -180,19 +199,21 @@ export function buildPublicSchema(schema: any, primary = '') {
     }
 
     for(let key of keys) {
+        const entry = schema[key];
+        const isComplex = typeof entry === "object" && entry.type;
+
+        if(isComplex && entry.private) continue;
+
         const fullKey = primary ? `${primary}.${key}` : key;
         output[fullKey] = '=';
 
-        const entry = schema[key];
-        const type = (typeof entry === "object" && entry.type) ? entry.type : entry;
-
+        const type = isComplex ? entry.type : entry;
         if(typeof type === "object" && !Array.isArray(type)) {
             output = {
                 ...output,
                 ...buildPublicSchema(type, fullKey)
             }
         }
-
     }
 
     return output
