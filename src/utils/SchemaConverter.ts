@@ -2,7 +2,7 @@ import * as mongoose from "mongoose";
 import {
     Api,
     ApiEdgeDefinition,
-    JSONDate,
+    JSONDate, LazyApiEdge,
     Mixed,
     OneToManyRelation,
     OneToOneRelation,
@@ -65,9 +65,13 @@ function mapSchemaFieldType(type: any): any {
 }
 
 function prepareSchemaReference(key: string, { ref: foreignEdgeName, relation = {} }: { ref: string, relation?: RelationMetadata }, api: Api, edge: ApiEdgeDefinition) {
-    const foreignEdge = api.edges.find(e => e.name == foreignEdgeName);
+    const foreignEdge = api.resolver.resolveEdgeLazy(foreignEdgeName, false);
     if(foreignEdge) {
-        const relationIndex = foreignEdge.relations.findIndex(r => r.to === edge || r.from === edge);
+        const isLazy = foreignEdge instanceof LazyApiEdge;
+        const relationIndex = isLazy
+            ? -1
+            : foreignEdge.relations.findIndex(r => r.to === edge || r.from === edge);
+
         if(relationIndex === -1) {
             api.relation(new OneToOneRelation(edge, foreignEdge, {
                 relationId: key,
@@ -75,43 +79,73 @@ function prepareSchemaReference(key: string, { ref: foreignEdgeName, relation = 
             }));
 
             if(relation.type !== 'one-to-one') {
-                api.relation(new OneToManyRelation(foreignEdge, edge, {
+                const foreignRelation = new OneToManyRelation(foreignEdge, edge, {
                     relatedId: key,
-                    relationId: foreignEdge.idField,
+                    relationId: isLazy ? 'id' : foreignEdge.idField,
                     name: relation.foreignName
-                }))
+                });
+
+                if(isLazy) {
+                    foreignRelation.onResolve = () => {
+                        foreignRelation.relationId = foreignEdge.idField
+                    }
+                }
+
+                api.relation(foreignRelation)
             }
         }
     }
 }
 
 function prepareSchemaReferenceArray(key: string, { ref: foreignEdgeName, relation = {} }: { ref: string, relation?: RelationMetadata }, api: Api, edge: ApiEdgeDefinition) {
-    const foreignEdge = api.edges.find(e => e.name == foreignEdgeName);
+    const foreignEdge = api.resolver.resolveEdgeLazy(foreignEdgeName, false);
     if(foreignEdge) {
-        const relationIndex = foreignEdge.relations.findIndex(r => r.to === edge || r.from === edge);
+        const isLazy = foreignEdge instanceof LazyApiEdge;
+        const relationIndex = isLazy
+            ? -1
+            : foreignEdge.relations.findIndex(r => r.to === edge || r.from === edge);
+
         if(relationIndex === -1) {
             const hasPair = relation.type !== 'many-to-one';
-            api.relation(new OneToManyRelation(edge, foreignEdge, {
+            let localRelation = new OneToManyRelation(edge, foreignEdge, {
                 relationId: key,
+                relatedId: isLazy ? 'id' : foreignEdge.idField,
                 name: relation.name || key,
                 hasPair
-            }));
+            });
 
-            if(hasPair) {
-                api.relation(new OneToManyRelation(foreignEdge, edge, {
+            if(isLazy) {
+                localRelation.onResolve = () => {
+                    foreignRelation.relatedId = foreignEdge.idField
+                }
+            }
+
+            api.relation(localRelation);
+
+            let foreignRelation: OneToManyRelation|OneToOneRelation;
+            if (hasPair) {
+                foreignRelation = new OneToManyRelation(foreignEdge, edge, {
                     relatedId: key,
-                    relationId: foreignEdge.idField,
+                    relationId: isLazy ? 'id' : foreignEdge.idField,
                     name: relation.foreignName,
                     hasPair
-                }))
+                })
             }
             else {
-                api.relation(new OneToOneRelation(foreignEdge, edge, {
+                foreignRelation = new OneToOneRelation(foreignEdge, edge, {
                     relatedId: key,
-                    relationId: foreignEdge.idField,
+                    relationId: isLazy ? 'id' : foreignEdge.idField,
                     name: relation.foreignName
-                }))
+                })
             }
+
+            if(isLazy) {
+                foreignRelation.onResolve = () => {
+                    foreignRelation.relationId = foreignEdge.idField
+                }
+            }
+
+            api.relation(foreignRelation)
         }
     }
 }
