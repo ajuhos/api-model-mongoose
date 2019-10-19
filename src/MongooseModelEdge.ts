@@ -1,10 +1,12 @@
 import {
     ApiEdge, ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse,
-    ApiEdgeQueryFilter, ApiEdgeQueryFilterType
+    ApiEdgeQueryFilter, ApiEdgeQueryFilterType, Api, ApiEdgeSchema
 } from "api-core";
+import {mapSchema, convertMongooseSchemaToSimplSchema, buildPublicSchema} from "./utils/SchemaConverter"
 import * as mongoose from "mongoose";
 const parse = require('obj-parse'),
-    deepKeys = require('deep-keys');
+    deepKeys = require('deep-keys'),
+    debug = require('debug')('api-model-mongoose');
 
 export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge implements ApiEdgeDefinition {
 
@@ -20,6 +22,35 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     methods = [];
     relations = [];
     actions = [];
+
+    private originalSchema: any;
+    private originalPublicSchema: any;
+
+    constructor(publicSchema: any|((schema: any) => any), schema: any) {
+        super();
+
+        if(typeof publicSchema === 'function') {
+            this.originalPublicSchema = publicSchema(buildPublicSchema(schema));
+        }
+        else {
+            this.originalPublicSchema = publicSchema || buildPublicSchema(schema);
+        }
+
+        this.originalSchema = schema
+    }
+
+    prepare = async (api: Api) => {
+        if(this.originalSchema) {
+            this.schema = new ApiEdgeSchema(
+                this.originalPublicSchema,
+                mapSchema(convertMongooseSchemaToSimplSchema(this.originalSchema, api, this), this.originalPublicSchema),
+                Object.keys(this.originalPublicSchema)
+            )
+        }
+        else {
+            this.schema = new ApiEdgeSchema(this.originalPublicSchema, null)
+        }
+    };
 
     inspect = () => `/${this.pluralName}`;
 
@@ -65,7 +96,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     private static handleMongoError(e: Error): ApiEdgeError|Error {
         if(e instanceof (mongoose as any).Error.ValidationError) {
-            return new ApiEdgeError(422, "Unprocessable Entity")
+            return new ApiEdgeError(422, "Unprocessable Entity: " + e.message)
         }
         else {
             console.log('MONGO ERROR', e);
@@ -89,8 +120,11 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let query = this.provider.findOne(queryString).lean();
             if(context.fields.length) query.select(context.fields.join(' '));
 
+            debug('GET', queryString, context.fields, context.sortBy);
+
             query.then(entry => {
-                resolve(new ApiEdgeQueryResponse(entry))
+                if(entry) resolve(new ApiEdgeQueryResponse(entry));
+                else reject(new ApiEdgeError(404, "Not Found"))
             }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
         })
     };
@@ -100,6 +134,9 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let queryString = {};
             this.applyFilters(queryString, context.filters);
             let query = this.provider.find(queryString).lean();
+
+            debug('LIST', queryString, context.fields, context.sortBy, context.pagination);
+
             if(context.fields.length) query.select(context.fields.join(' '));
             if(context.sortBy) {
                 let sortOptions: any = {};
@@ -124,15 +161,19 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     createEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
+            debug('CREATE', body);
+
             let query = this.provider.create(body);
             query.then(entries => {
-                resolve(new ApiEdgeQueryResponse(entries))
+                resolve(new ApiEdgeQueryResponse(entries.toObject()))
             }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
         })
     };
 
     patchEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
+            debug('PATCH', context.id, body);
+
             if(!context.id) {
                 let res = this.extractKey(body);
                 if(res == null) return reject(new ApiEdgeError(400, "Missing ID"));
@@ -145,7 +186,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 deepKeys(body).map((key: any) => parse(key)).forEach((parsedKey: any) => parsedKey.assign(entry, parsedKey(body)));
                 let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
                 query.then(() => {
-                    resolve(new ApiEdgeQueryResponse(entry))
+                    resolve(new ApiEdgeQueryResponse(entry));
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
             }).catch(reject)
         })
@@ -153,6 +194,8 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     updateEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
+            debug('UPDATE', context.id, body);
+
             if(!context.id) {
                 let res = this.extractKey(body);
                 if(res == null) return reject(new ApiEdgeError(400, "Missing ID"));
@@ -178,6 +221,8 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     removeEntry = (context: ApiEdgeQueryContext, body: any): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
+            debug('REMOVE', context.id, body);
+
             if(!context.id) {
                 let res = this.extractKey(body);
                 if(res == null) return reject(new ApiEdgeError(400, "Missing ID"));
@@ -202,6 +247,8 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     exists = (context: ApiEdgeQueryContext): Promise<ApiEdgeQueryResponse> => {
         return new Promise<ApiEdgeQueryResponse>((resolve, reject) => {
+            debug('EXISTS', context.id);
+
             let query = this.provider.findOne({ [this.keyField]: context.id }, 'id');
             query.then(entry => {
                 resolve(new ApiEdgeQueryResponse(!!entry))
