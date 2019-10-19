@@ -202,6 +202,7 @@ function mapSchemaField(field: any, api?: Api, edge?: ApiEdgeDefinition, key?: s
         delete output.set;
         delete output.validate;
         delete output.private;
+        delete output.expires;
 
         return output
     }
