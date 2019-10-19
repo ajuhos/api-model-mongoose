@@ -96,7 +96,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     private static handleMongoError(e: Error): ApiEdgeError|Error {
         if(e instanceof (mongoose as any).Error.ValidationError) {
-            return new ApiEdgeError(422, "Unprocessable Entity")
+            return new ApiEdgeError(422, "Unprocessable Entity: " + e.message)
         }
         else {
             console.log('MONGO ERROR', e);
