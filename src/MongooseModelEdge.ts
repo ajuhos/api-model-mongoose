@@ -1,7 +1,7 @@
 import {
     ApiEdge, ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse,
     ApiEdgeQueryFilter, ApiEdgeQueryFilterType, Api, ApiEdgeSchema
-} from "api-core";
+} from "@logiscool/api-core";
 import {mapSchema, convertMongooseSchemaToSimplSchema, buildPublicSchema} from "./utils/SchemaConverter"
 import * as mongoose from "mongoose";
 const parse = require('obj-parse'),
@@ -96,7 +96,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     private static handleMongoError(e: Error): ApiEdgeError|Error {
         if(e instanceof (mongoose as any).Error.ValidationError) {
-            return new ApiEdgeError(422, "Unprocessable Entity: " + e.message)
+            return new ApiEdgeError(422, "Unprocessable Entity: " + e.message);
         }
         else {
             console.log('MONGO ERROR', e);
@@ -180,15 +180,18 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 context.id = res.id;
             }
 
-            this.getEntry(context).then(resp => {
-                let entry = resp.data;
-                //TODO: Better deep extend?
-                deepKeys(body).map((key: any) => parse(key)).forEach((parsedKey: any) => parsedKey.assign(entry, parsedKey(body)));
-                let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
-                query.then(() => {
-                    resolve(new ApiEdgeQueryResponse(entry));
-                }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
-            }).catch(reject)
+            const keys = deepKeys(body);
+            const queryValue: { $set: { [key: string]: any } } = { $set: {} }
+            for(let key of keys) {
+                queryValue.$set[key] = parse(key)(body)
+            }
+
+            let query = this.provider.updateOne({ _id: context.id }, queryValue).lean();
+            query.then(() => {
+                this.getEntry(context)
+                    .then(resolve)
+                    .catch(reject)
+            }).catch(e => reject(MongooseModelEdge.handleMongoError(e)))
         })
     };
 
@@ -205,7 +208,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             this.getEntry(context).then(resp => {
                 let entry = resp.data;
                 Object.keys(body).forEach(key => entry[key] = body[key]);
-                let query =this.provider.update({ _id: entry._id||entry.id }, entry).lean();
+                let query = this.provider.updateOne({ _id: entry._id||entry.id }, entry).lean();
                 query.then(() => {
                     resolve(new ApiEdgeQueryResponse(entry))
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
