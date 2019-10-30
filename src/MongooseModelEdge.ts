@@ -186,7 +186,9 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 queryValue.$set[key] = parse(key)(body)
             }
 
-            let query = this.provider.updateOne({ _id: context.id }, queryValue).lean();
+            let queryString = { [this.keyField]: context.id };
+            this.applyFilters(queryString, context.filters);
+            let query = this.provider.updateOne(queryString, queryValue).lean();
             query.then(() => {
                 this.getEntry(context)
                     .then(resolve)
