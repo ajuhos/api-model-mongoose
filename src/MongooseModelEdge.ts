@@ -1,7 +1,7 @@
 import {
     ApiEdge, ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse,
     ApiEdgeQueryFilter, ApiEdgeQueryFilterType, Api, ApiEdgeSchema
-} from "@logiscool/api-core";
+} from "api-core";
 import {mapSchema, convertMongooseSchemaToSimplSchema, buildPublicSchema} from "./utils/SchemaConverter"
 import * as mongoose from "mongoose";
 const parse = require('obj-parse'),
