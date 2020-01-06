@@ -17,10 +17,10 @@
     "@types/bson" "*"
     "@types/node" "*"
 
-"@types/mongoose@^5.3.7":
-  version "5.3.7"
-  resolved "https://registry.yarnpkg.com/@types/mongoose/-/mongoose-5.3.7.tgz#426c6735122ae565f3073bdea97ebae2cdba1bf8"
-  integrity sha512-VawmiFqxLcyRr04fF8imWrre/soDD0I4LZBYbIPx6MTy9V3shT6dUpt1u8Ia2tUmGbBsYIfwitbcih5NegLARw==
+"@types/mongoose@~5":
+  version "5.5.38"
+  resolved "https://registry.yarnpkg.com/@types/mongoose/-/mongoose-5.5.38.tgz#798fb8f4a50e21953138daf5195c0d8db9aa2f40"
+  integrity sha512-W+vLJ4t0DUQhnV/ivLBLVCOvx3UnU/HgrKrEeHCUwE9VGDTdoOQOgOTiElErf+ome9zZUek6VZil5t7HfJvO+w==
   dependencies:
     "@types/mongodb" "*"
     "@types/node" "*"
@@ -30,19 +30,33 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.18.tgz#1d3ca764718915584fcd9f6344621b7672665c67"
   integrity sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==
 
-api-core@0.7.3:
-  version "0.7.3"
-  resolved "https://registry.yarnpkg.com/api-core/-/api-core-0.7.3.tgz#1e83ba46d933d071c42b13ba5e2505ff643a4d5f"
-  integrity sha512-2NDE8Ja0atb1vWrtd7YGK0gQqti1dHOi13m2n7BMcokeD1eS+VZ0WMxxfNVLgEnh4vipqAPe0aTC+Xr/8XGtsQ==
+"@types/node@~10":
+  version "10.17.13"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.17.13.tgz#ccebcdb990bd6139cd16e84c39dc2fb1023ca90c"
+  integrity sha512-pMCcqU2zT4TjqYFrWtYHKal7Sl30Ims6ulZ4UFXxI4xbtQqK/qqKwkDoBFCfooRqqmRu9vY3xaJRwxSh673aYg==
+
+api-core@0.24.1:
+  version "0.24.1"
+  resolved "https://registry.yarnpkg.com/api-core/-/api-core-0.24.1.tgz#43c23ffaf002dfa8adebfd0467f19a1e91f9e542"
+  integrity sha512-bECsfsubfhXsAGy50gHeX0CIsg9/y0UAgSkP7FjMhMRVFqDsZAqmbP1PnijRn/b1GfnkKQx3Nq0AWPB8uy8mlg==
   dependencies:
+    debug "^4.1.1"
     deep-keys "^0.3.0"
     obj-parse "^0.3.0"
     simpl-schema "^1.4.2"
+    uuid "^3.3.2"
 
 clone@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.2.tgz#1b7f4b9f591f1e8f83670401600345a02887435f"
   integrity sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=
+
+debug@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.1.1.tgz#3b72260255109c6b589cee050f1d516139664791"
+  integrity sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==
+  dependencies:
+    ms "^2.1.1"
 
 deep-keys@^0.3.0:
   version "0.3.0"
@@ -264,6 +278,11 @@ mongo-object@^0.1.3:
     lodash.isobject "^3.0.2"
     lodash.without "^4.4.0"
 
+ms@^2.1.1:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
+  integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
+
 obj-parse@^0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/obj-parse/-/obj-parse-0.3.0.tgz#da854afc102fb7099d825c5e37bddcff867cbf4f"
@@ -288,3 +307,8 @@ simpl-schema@^1.4.2:
     lodash.uniq "^4.5.0"
     message-box "^0.2.0"
     mongo-object "^0.1.3"
+
+uuid@^3.3.2:
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.3.tgz#4568f0216e78760ee1dbf3a4d2cf53e224112866"
+  integrity sha512-pW0No1RGHgzlpHJO1nsVrHKpOEIxkGg1xB+v0ZmdNH5OAeAwzAVrCnI2/6Mtx+Uys6iaylxa+D3g4j63IKKjSQ==

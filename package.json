@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/ajuhos/api-model-mongoose#readme",
   "dependencies": {
+    "@types/node": "~10",
     "api-core": "0.24.1",
     "debug": "^4.1.1",
     "deep-keys": "^0.3.0",
