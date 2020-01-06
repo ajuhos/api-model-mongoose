@@ -236,7 +236,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
             this.getEntry(context).then(resp => {
                 let entry = resp.data;
-                let query = this.provider.remove({ [this.keyField]: context.id });
+                let query = this.provider.deleteOne({ [this.keyField]: context.id });
                 query.then(() => {
                     resolve(new ApiEdgeQueryResponse(entry))
                 }).catch(e => reject(MongooseModelEdge.handleMongoError(e)))
