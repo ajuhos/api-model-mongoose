@@ -145,7 +145,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             }
             if(context.pagination) {
                 query.limit(context.pagination.limit).skip(context.pagination.skip);
-                this.provider.countDocuments(queryString).then(count => {
+                this.provider.estimatedDocumentCount(queryString).then(count => {
                     query.then(entries => {
                         resolve(new ApiEdgeQueryResponse(entries, { pagination: { total: count } }))
                     }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
