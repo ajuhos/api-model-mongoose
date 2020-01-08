@@ -35,10 +35,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.17.13.tgz#ccebcdb990bd6139cd16e84c39dc2fb1023ca90c"
   integrity sha512-pMCcqU2zT4TjqYFrWtYHKal7Sl30Ims6ulZ4UFXxI4xbtQqK/qqKwkDoBFCfooRqqmRu9vY3xaJRwxSh673aYg==
 
-api-core@0.24.3:
-  version "0.24.3"
-  resolved "https://registry.yarnpkg.com/api-core/-/api-core-0.24.3.tgz#5c04b7167c7800fc3f6a54d165b1bfb5145ebbf0"
-  integrity sha512-QUr53NQcjIptZzq7kTLUUwVHu1Ev/boMEJSulIb+/8+tKlb0iIPgiaPjNw6ilXl+vgYorqDxOXRwYmxQH395Nw==
+api-core@0.24.4:
+  version "0.24.4"
+  resolved "https://registry.yarnpkg.com/api-core/-/api-core-0.24.4.tgz#558b4a51b66b6bf36ea85aaa9451cc5268aa59b0"
+  integrity sha512-V1XkdQZOlLI92I4kK5A5FZikAPH0mtKUaw3psYfR16y49i/d6yyz9+ZoBtEXLjf2S9dZK9p8khXAj95+qipftQ==
   dependencies:
     debug "^4.1.1"
     deep-keys "^0.3.0"
