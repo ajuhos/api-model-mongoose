@@ -20,7 +20,9 @@ export function mapSchema(schema: any, publicSchema: any) {
     const output: { [key: string]: any } = {};
     for(let field of publicFields) {
         //TODO. Support deep fields
-        const schemaField = schema[field];
+        const publicField = publicSchema[field];
+        let privateField = publicField === '=' ? field : publicField.substring(1);
+        const schemaField = schema[privateField];
         if(schemaField) {
             output[field] = mapFieldToSimple(schemaField)
         }
