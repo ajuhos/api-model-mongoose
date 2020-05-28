@@ -1,7 +1,7 @@
 import * as mongoose from "mongoose";
 import {
     Api,
-    ApiEdgeDefinition,
+    ApiEdgeDefinition, ApiEdgeSchemaTransformation,
     JSONDate, LazyApiEdge,
     Mixed,
     OneToManyRelation,
@@ -21,8 +21,14 @@ export function mapSchema(schema: any, publicSchema: any) {
     for(let field of publicFields) {
         //TODO. Support deep fields
         const publicField = publicSchema[field];
-        let privateField = publicField === '=' ? field : publicField.substring(1);
-        const schemaField = schema[privateField];
+        let schemaField;
+        if(publicField instanceof ApiEdgeSchemaTransformation) {
+            schemaField = publicField.schemaType
+        }
+        else {
+            let privateField = publicField === '=' ? field : publicField.substring(1);
+            schemaField = schema[privateField]
+        }
         if(schemaField) {
             output[field] = mapFieldToSimple(schemaField)
         }
