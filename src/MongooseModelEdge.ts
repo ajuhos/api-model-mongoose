@@ -1,9 +1,10 @@
 import {
     ApiEdge, ApiEdgeDefinition, ApiEdgeError, ApiEdgeQueryContext, ApiEdgeQueryResponse,
-    ApiEdgeQueryFilter, ApiEdgeQueryFilterType, Api, ApiEdgeSchema
+    ApiEdgeQueryFilter, ApiEdgeQueryFilterType, Api, ApiEdgeSchema, ApiEdgeMethod
 } from "api-core";
 import {mapSchema, convertMongooseSchemaToSimplSchema, buildPublicSchema} from "./utils/SchemaConverter"
 import * as mongoose from "mongoose";
+import {SchemaTypeMapper} from "api-core/dist/src/edge/utils/SchemaTypeMapper";
 const parse = require('obj-parse'),
     deepKeys = require('deep-keys'),
     debug = require('debug')('api-model-mongoose');
@@ -19,7 +20,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     keyField = MongooseModelEdge.defaultKeyField;
     provider: mongoose.Model<T>;
 
-    methods = [];
+    methods: ApiEdgeMethod[] = [];
     relations = [];
     actions = [];
 
@@ -38,6 +39,34 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
         this.originalSchema = schema
     }
+
+    metadata = () => {
+        return {
+            name: this.name,
+            pluralName: this.pluralName,
+            idField: this.idField,
+            keyField: this.keyField,
+            fields: this.schema.fields,
+            methods: this.methods.map(m => ({
+                name: m.name,
+                type: m.acceptedTypes,
+                scope: m.scope,
+                parameters: m.parameters
+            })),
+            //relatedFields,
+            typings: this.schema.originalSchema
+                ? SchemaTypeMapper.exportSchema(this.schema.originalSchema)
+                : undefined,
+            allowGet: this.allowGet,
+            allowList: this.allowList,
+            allowCreate: this.allowCreate,
+            allowUpdate: this.allowUpdate,
+            allowPatch: this.allowPatch,
+            allowRemove: this.allowRemove,
+            allowExists: this.allowExists,
+            external: this.external
+        }
+    };
 
     prepare = async (api: Api) => {
         if(this.originalSchema) {
