@@ -147,8 +147,16 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let queryString = { [this.keyField]: context.id };
             this.applyFilters(queryString, context.filters);
             let query = this.provider.findOne(queryString).lean();
-            if(context.fields.length) query.select(context.fields.join(' '));
-
+            
+            // Apply request field filters
+            if(context.fields.length) { 
+                query.select(context.fields.join(' '));
+            // Apply default non private filter
+            } else if (this.provider.schema && this.provider.schema.obj) {
+                query.select(Object.keys(this.provider.schema.obj).filter(
+                    x => !this.provider.schema.obj[x].private
+                ).join(' '));
+            }
             debug('GET', queryString, context.fields, context.sortBy);
 
             query.then(entry => {
@@ -166,7 +174,15 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
             debug('LIST', queryString, context.fields, context.sortBy, context.pagination);
 
-            if(context.fields.length) query.select(context.fields.join(' '));
+            // Apply request field filters
+            if(context.fields.length) {
+                query.select(context.fields.join(' '));
+            // Apply default non private filter
+            } else if (this.provider.schema && this.provider.schema.obj) {
+                query.select(Object.keys(this.provider.schema.obj).filter(
+                    x => !this.provider.schema.obj[x].private
+                ).join(' '));
+            }
             if(context.sortBy) {
                 let sortOptions: any = {};
                 context.sortBy.forEach((sort: any[]) => sortOptions[""+sort[0]] = sort[1]);
@@ -174,7 +190,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             }
             if(context.pagination) {
                 query.limit(context.pagination.limit).skip(context.pagination.skip);
-                this.provider.estimatedDocumentCount(queryString).then(count => {
+                this.provider.count(queryString).then(count => {
                     query.then(entries => {
                         resolve(new ApiEdgeQueryResponse(entries, { pagination: { total: count } }))
                     }).catch(e => reject(MongooseModelEdge.handleMongoError(e)));
