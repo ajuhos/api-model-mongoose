@@ -166,7 +166,15 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
             debug('LIST', queryString, context.fields, context.sortBy, context.pagination);
 
-            if(context.fields.length) query.select(context.fields.join(' '));
+            // Apply request field filters
+            if(context.fields.length) {
+                query.select(context.fields.join(' '));
+            // Apply default non private filter
+            } else if (query.schema && query.schema.obj) {
+                query.select(Object.keys(query.schema.obj).filter(
+                    x => !query.schema.obj[x].private
+                ).join(' '));
+            }
             if(context.sortBy) {
                 let sortOptions: any = {};
                 context.sortBy.forEach((sort: any[]) => sortOptions[""+sort[0]] = sort[1]);
