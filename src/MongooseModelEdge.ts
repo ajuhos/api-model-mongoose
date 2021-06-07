@@ -152,9 +152,9 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             if(context.fields.length) { 
                 query.select(context.fields.join(' '));
             // Apply default non private filter
-            } else if (query.schema && query.schema.obj) {
-                query.select(Object.keys(query.schema.obj).filter(
-                    x => !query.schema.obj[x].private
+            } else if (this.provider.schema && this.provider.schema.obj) {
+                query.select(Object.keys(this.provider.schema.obj).filter(
+                    x => !this.provider.schema.obj[x].private
                 ).join(' '));
             }
             debug('GET', queryString, context.fields, context.sortBy);
@@ -178,9 +178,9 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             if(context.fields.length) {
                 query.select(context.fields.join(' '));
             // Apply default non private filter
-            } else if (query.schema && query.schema.obj) {
-                query.select(Object.keys(query.schema.obj).filter(
-                    x => !query.schema.obj[x].private
+            } else if (this.provider.schema && this.provider.schema.obj) {
+                query.select(Object.keys(this.provider.schema.obj).filter(
+                    x => !this.provider.schema.obj[x].private
                 ).join(' '));
             }
             if(context.sortBy) {
