@@ -147,8 +147,16 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
             let queryString = { [this.keyField]: context.id };
             this.applyFilters(queryString, context.filters);
             let query = this.provider.findOne(queryString).lean();
-            if(context.fields.length) query.select(context.fields.join(' '));
-
+            
+            // Apply request field filters
+            if(context.fields.length) { 
+                query.select(context.fields.join(' '));
+            // Apply default non private filter
+            } else if (query.schema && query.schema.obj) {
+                query.select(Object.keys(query.schema.obj).filter(
+                    x => !query.schema.obj[x].private
+                ).join(' '));
+            }
             debug('GET', queryString, context.fields, context.sortBy);
 
             query.then(entry => {
