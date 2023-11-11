@@ -90,28 +90,31 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
     private applyFilter(item: any, filter: ApiEdgeQueryFilter) {
         switch(filter.type) {
             case ApiEdgeQueryFilterType.Equals:
-                item[this.mapIdToKeyField(filter.field)] = filter.value;
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : filter.value});
                 break;
             case ApiEdgeQueryFilterType.NotEquals:
-                item[this.mapIdToKeyField(filter.field)] = { $ne: filter.value };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $ne: filter.value }});
                 break;
             case ApiEdgeQueryFilterType.GreaterThan:
-                item[this.mapIdToKeyField(filter.field)] = { $gt: filter.value };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $gt: filter.value }});
                 break;
             case ApiEdgeQueryFilterType.GreaterThanOrEquals:
-                item[this.mapIdToKeyField(filter.field)] = { $gte: filter.value };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $gte: filter.value }});
                 break;
             case ApiEdgeQueryFilterType.LowerThan:
-                item[this.mapIdToKeyField(filter.field)] = { $lt: filter.value };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $lt: filter.value }});
                 break;
             case ApiEdgeQueryFilterType.LowerThanOrEquals:
-                item[this.mapIdToKeyField(filter.field)] = { $lte: filter.value };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $lte: filter.value }});
                 break;
             case ApiEdgeQueryFilterType.Similar:
-                item[this.mapIdToKeyField(filter.field)] = { $regex: filter.value, $options: 'i' };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $regex: filter.value, $options: 'i' }});
                 break;
             case ApiEdgeQueryFilterType.In:
-                item[this.mapIdToKeyField(filter.field)] = { $in: filter.value };
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $in: filter.value }});
+                break;
+            case ApiEdgeQueryFilterType.NotIn:
+                item.$and.push({[this.mapIdToKeyField(filter.field)] : { $nin: filter.value }});
                 break;
             default:
                 return false;
@@ -144,10 +147,19 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     getEntry = (context: ApiEdgeQueryContext): Promise<ApiEdgeQueryResponse> => {
         return new Promise((resolve, reject) => {
-            let queryString = { [this.keyField]: context.id };
+            let queryString = { $and: [{ [this.keyField]: context.id }]};
             this.applyFilters(queryString, context.filters);
             let query = this.provider.findOne(queryString).lean();
-            if(context.fields.length) query.select(context.fields.join(' '));
+            // Apply request field filters
+            if(context.fields.length) {
+                query.select(context.fields.join(' '));
+                // Apply default non private filter
+            } else if (this.provider.schema && this.provider.schema.obj) {
+                query.select(Object.keys(this.provider.schema.obj).filter(
+                    x => !this.provider.schema.obj[x].private
+                ).join(' '));
+            }
+
 
             debug('GET', queryString, context.fields, context.sortBy);
 
@@ -160,16 +172,28 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
 
     listEntries = (context: ApiEdgeQueryContext): Promise<ApiEdgeQueryResponse> => {
         return new Promise((resolve, reject) => {
-            let queryString = {};
+            let queryString: any = { $and: []};
             this.applyFilters(queryString, context.filters);
+            if(queryString.$and.length === 0) {
+                queryString = {};
+            }
             let query = this.provider.find(queryString).lean();
 
             debug('LIST', queryString, context.fields, context.sortBy, context.pagination);
 
-            if(context.fields.length) query.select(context.fields.join(' '));
+            // Apply request field filters
+            if(context.fields.length) {
+                query.select(context.fields.join(' '));
+                // Apply default non private filter
+            } else if (this.provider.schema && this.provider.schema.obj) {
+                query.select(Object.keys(this.provider.schema.obj).filter(
+                    x => !this.provider.schema.obj[x].private
+                ).join(' '));
+            }
+
             if(context.sortBy) {
                 let sortOptions: any = {};
-                context.sortBy.forEach((sort: any[]) => sortOptions[""+sort[0]] = sort[1]);
+                context.sortBy.forEach((sort: any[]) => sortOptions[""+this.mapIdToKeyField(sort[0])] = sort[1]);
                 query.sort(sortOptions);
             }
             if(context.pagination) {
@@ -215,7 +239,7 @@ export class MongooseModelEdge<T extends mongoose.Document> extends ApiEdge impl
                 queryValue.$set[key] = parse(key)(body)
             }
 
-            let queryString = { [this.keyField]: context.id };
+            let queryString = { $and: [{ [this.keyField]: context.id }] };
             this.applyFilters(queryString, context.filters);
             let query = this.provider.updateOne(queryString, queryValue).lean();
             query.then(() => {
